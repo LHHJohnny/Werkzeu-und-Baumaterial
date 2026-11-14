@@ -1,35 +1,38 @@
 /* ============================================================
-   WERKZUGLISTE – Logik (Supabase)
+   WERKZEUGLISTE – Logik (Supabase)
+   Optik/Verhalten analog Tankbuch
    ============================================================ */
 
-// ---------- ZUGANGSDATEN (aus "API Daten.txt") [1] ----------
-// Hinweis: createClient braucht die BASIS-URL (ohne /rest/v1/)
+// ---------- ZUGANGSDATEN (aus "API Daten.txt") ----------
 const SUPABASE_URL      = "https://qnjdxajhlmixmfpimzkf.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_3kG5HjJeEbvDBT1BKtGiEw_wID12RiX";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Spalten pro Tabelle
+// ---------- SPALTEN-DEFINITIONEN ----------
+// txt: Text-Zelle (links, umlaufbar)  |  num: Zahl  |  rest: Standard
 const TABLES = {
   werkzeuge: {
     db: "werkzeuge",
+    title: "Werkzeuge",
     columns: [
-      { key: "hersteller",  label: "Hersteller"  },
-      { key: "gerat",       label: "Gerät"       },
-      { key: "bezeichnung", label: "Bezeichnung" },
-      { key: "gewerk_art",  label: "Gewerk/Art"  },
-      { key: "bemerkung",   label: "Bemerkung"   }
+      { key: "hersteller",  label: "Hersteller",  type: "txt" },
+      { key: "gerat",       label: "Gerät",       type: "txt" },
+      { key: "bezeichnung", label: "Bezeichnung", type: "txt" },
+      { key: "gewerk_art",  label: "Gewerk/Art",  type: "txt" },
+      { key: "bemerkung",   label: "Bemerkung",   type: "txt" }
     ]
   },
   baumaterialien: {
     db: "baumaterialien",
+    title: "Baumaterialien",
     columns: [
-      { key: "hersteller",  label: "Hersteller"  },
-      { key: "bezeichnung", label: "Bezeichnung" },
-      { key: "gewerk_art",  label: "Gewerk/Art"  },
-      { key: "menge",       label: "Menge"       },
-      { key: "einheit",     label: "Einheit"     },
-      { key: "bemerkung",   label: "Bemerkung"   }
+      { key: "hersteller",  label: "Hersteller",  type: "txt" },
+      { key: "bezeichnung", label: "Bezeichnung", type: "txt" },
+      { key: "gewerk_art",  label: "Gewerk/Art",  type: "txt" },
+      { key: "menge",       label: "Menge",       type: "num" },
+      { key: "einheit",     label: "Einheit",     type: "txt" },
+      { key: "bemerkung",   label: "Bemerkung",   type: "txt" }
     ]
   }
 };
@@ -37,57 +40,66 @@ const TABLES = {
 const state = {
   tab: "werkzeuge",
   data:   { werkzeuge: [], baumaterialien: [] },
-  search: { werkzeuge: "", baumaterialien: "" }
+  search: ""
 };
 
-let currentRole = "reader"; // default = nur lesen
-let modalTab = null;
+let currentRole = "reader";
+let sheetTab = null;
+
+/* ============================================================
+   THEME (Dark/Light, gespeichert)
+   ============================================================ */
+function applyTheme(t) {
+  document.documentElement.setAttribute("data-theme", t);
+  const btn = document.getElementById("themeToggle");
+  if (btn) btn.textContent = (t === "dark") ? "🌙" : "☀️";
+}
+function initTheme() {
+  const saved = localStorage.getItem("wl-theme") || "dark";
+  applyTheme(saved);
+  document.getElementById("themeToggle").addEventListener("click", () => {
+    const next = (document.documentElement.getAttribute("data-theme") === "dark") ? "light" : "dark";
+    applyTheme(next);
+    localStorage.setItem("wl-theme", next);
+  });
+}
 
 /* ============================================================
    AUTH
    ============================================================ */
 async function init() {
+  initTheme();
   bindUI();
   const { data } = await supabase.auth.getSession();
   if (data?.session) showApp(data.session.user);
   else showLogin();
 
-  supabase.auth.onAuthStateChange((_event, session) => {
+  supabase.auth.onAuthStateChange((_e, session) => {
     if (session) showApp(session.user);
     else showLogin();
   });
 }
 
 function showLogin() {
-  document.getElementById("app-view").classList.add("hidden");
-  document.getElementById("login-view").classList.remove("hidden");
+  document.getElementById("appScreen").style.display = "none";
+  document.getElementById("loginScreen").style.display = "flex";
 }
 
 function showApp(user) {
-  document.getElementById("login-view").classList.add("hidden");
-  document.getElementById("app-view").classList.remove("hidden");
-  document.getElementById("user-email").textContent = user.email;
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("appScreen").style.display = "block";
 
-  currentRole = getUserRole(user);
+  currentRole = (user?.app_metadata?.role === "editor") ? "editor" : "reader";
+  document.getElementById("roleTag").textContent =
+    (currentRole === "editor") ? "Editor" : "Nur Lesen";
   updateRoleUI();
 
   loadAll();
 }
 
-function getUserRole(user) {
-  // Rolle kommt aus dem JWT -> app_metadata (gesetzt via RLS/SQL)
-  return user?.app_metadata?.role === "editor" ? "editor" : "reader";
-}
-
 function updateRoleUI() {
-  const isEditor = currentRole === "editor";
-  const badge = document.getElementById("role-badge");
-  badge.textContent = isEditor ? "Editor" : "Nur Lesen";
-  badge.className = "badge " + (isEditor ? "badge-editor" : "badge-reader");
-
-  // + Button nur für Editor
   document.querySelectorAll(".editor-only").forEach(el => {
-    el.style.display = isEditor ? "" : "none";
+    el.style.display = (currentRole === "editor") ? "" : "none";
   });
 }
 
@@ -108,115 +120,125 @@ async function loadTable(tab) {
    ============================================================ */
 function bindUI() {
   // Login
-  document.getElementById("login-form").addEventListener("submit", async (e) => {
+  document.getElementById("loginForm").addEventListener("submit", async (e) => {
     e.preventDefault();
-    const email    = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-    const errEl    = document.getElementById("login-error");
+    const email    = document.getElementById("loginEmail").value;
+    const password = document.getElementById("loginPass").value;
+    const errEl    = document.getElementById("loginError");
     errEl.textContent = "";
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) errEl.textContent = "Anmeldung fehlgeschlagen: " + error.message;
   });
 
   // Logout
-  document.getElementById("logout-btn").addEventListener("click", () => supabase.auth.signOut());
+  document.getElementById("logoutBtn").addEventListener("click", () => supabase.auth.signOut());
 
   // Tabs
-  document.querySelectorAll(".tab").forEach(btn => {
-    btn.addEventListener("click", () => {
-      state.tab = btn.dataset.tab;
-      switchTab();
-    });
-  });
-
-  // Suche + Anlegen
-  ["werkzeuge", "baumaterialien"].forEach(tab => {
-    document.getElementById("search-" + tab).addEventListener("input", (e) => {
-      state.search[tab] = e.target.value.trim().toLowerCase();
+  document.querySelectorAll("#tabTabs .vehicle-tab").forEach(tabEl => {
+    tabEl.addEventListener("click", () => {
+      state.tab = tabEl.dataset.tab;
+      state.search = "";
+      document.getElementById("searchBar").value = "";
+      document.querySelectorAll("#tabTabs .vehicle-tab")
+        .forEach(t => t.classList.toggle("active", t === tabEl));
+      document.getElementById("sectionTitle").textContent = TABLES[state.tab].title;
       render();
     });
-    document.getElementById("add-" + tab).addEventListener("click", () => {
-      if (currentRole === "editor") openAddModal(tab);
-    });
   });
 
-  // Modal schließen
-  document.getElementById("modal-close").addEventListener("click", closeAddModal);
-  document.getElementById("modal").addEventListener("click", (e) => {
-    if (e.target.id === "modal") closeAddModal();
+  // Suche
+  document.getElementById("searchBar").addEventListener("input", (e) => {
+    state.search = e.target.value.trim().toLowerCase();
+    render();
+  });
+
+  // FAB -> Bottom Sheet (nur Editor)
+  document.getElementById("openSheet").addEventListener("click", () => {
+    if (currentRole === "editor") openSheet(state.tab);
+  });
+
+  // Sheet schließen
+  document.getElementById("sheetClose").addEventListener("click", closeSheet);
+  document.getElementById("sheetOverlay").addEventListener("click", (e) => {
+    if (e.target.id === "sheetOverlay") closeSheet();
   });
 
   // Eintrag speichern
-  document.getElementById("add-form").addEventListener("submit", async (e) => {
+  document.getElementById("sheetForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const form = e.target;
     const obj = {};
-    TABLES[modalTab].columns.forEach(c => {
+    TABLES[sheetTab].columns.forEach(c => {
       const val = form.elements[c.key].value.trim();
-      obj[c.key] = (c.key === "menge") ? (val === "" ? null : Number(val)) : val;
+      if (c.type === "num") obj[c.key] = (val === "" ? null : Number(val));
+      else obj[c.key] = val;
     });
-    const { error } = await supabase.from(TABLES[modalTab].db).insert(obj);
+    const { error } = await supabase.from(TABLES[sheetTab].db).insert(obj);
     if (error) { alert("Fehler: " + error.message); return; }
-    closeAddModal();
-    await loadTable(modalTab);
+    closeSheet();
+    await loadTable(sheetTab);
     render();
   });
-}
-
-function switchTab() {
-  document.querySelectorAll(".tab").forEach(b =>
-    b.classList.toggle("active", b.dataset.tab === state.tab));
-  document.getElementById("tab-werkzeuge").classList.toggle("hidden", state.tab !== "werkzeuge");
-  document.getElementById("tab-baumaterialien").classList.toggle("hidden", state.tab !== "baumaterialien");
 }
 
 /* ============================================================
    RENDER
    ============================================================ */
 function matchesSearch(row, tab) {
-  const q = state.search[tab];
+  const q = state.search;
   if (!q) return true;
   return TABLES[tab].columns.some(c =>
     (row[c.key] ?? "").toString().toLowerCase().includes(q));
 }
 
 function render() {
-  ["werkzeuge", "baumaterialien"].forEach(tab => {
-    const tbody = document.getElementById("rows-" + tab);
-    const rows  = state.data[tab].filter(r => matchesSearch(r, tab));
-    tbody.innerHTML = "";
+  const tab    = state.tab;
+  const wrap   = document.getElementById("tableWrap");
+  const empty  = document.getElementById("emptyState");
+  const status = document.getElementById("status");
+  const rows   = state.data[tab].filter(r => matchesSearch(r, tab));
 
-    rows.forEach(row => {
-      const tr = document.createElement("tr");
-      TABLES[tab].columns.forEach(c => {
-        const td = document.createElement("td");
-        td.textContent = row[c.key] ?? "";
-        tr.appendChild(td);
-      });
-      const tdDel = document.createElement("td");
-      tdDel.className = "cell-actions";
-      if (currentRole === "editor") {
-        const btn = document.createElement("button");
-        btn.className = "btn-icon";
-        btn.textContent = "🗑";
-        btn.title = "Löschen";
-        btn.onclick = () => deleteRow(tab, row.id);
-        tdDel.appendChild(btn);
-      }
-      tr.appendChild(tdDel);
-      tbody.appendChild(tr);
-    });
+  status.textContent = rows.length + " Einträge";
 
-    if (!rows.length) {
-      const tr = document.createElement("tr");
-      const td = document.createElement("td");
-      td.colSpan = TABLES[tab].columns.length + 1;
-      td.className = "empty";
-      td.textContent = "Keine Einträge gefunden.";
-      tr.appendChild(td);
-      tbody.appendChild(tr);
-    }
+  if (!rows.length) {
+    wrap.style.display = "none";
+    empty.style.display = "block";
+    return;
+  }
+  wrap.style.display = "block";
+  empty.style.display = "none";
+
+  let html = '<table class="entry-table"><thead><tr>';
+  TABLES[tab].columns.forEach(c => {
+    html += `<th class="${c.type === 'txt' ? 'txt' : ''}">${c.label}</th>`;
   });
+  if (currentRole === "editor") html += "<th></th>";
+  html += "</tr></thead><tbody>";
+
+  rows.forEach(row => {
+    html += "<tr>";
+    TABLES[tab].columns.forEach(c => {
+      const val = row[c.key] ?? "";
+      html += `<td class="${c.type === 'txt' ? 'txt' : ''}">${escapeHtml(val)}</td>`;
+    });
+    if (currentRole === "editor") {
+      html += `<td><button class="entry-del" data-id="${row.id}" title="Löschen">🗑</button></td>`;
+    }
+    html += "</tr>";
+  });
+  html += "</tbody></table>";
+  wrap.innerHTML = html;
+
+  // Lösch-Buttons binden
+  wrap.querySelectorAll(".entry-del").forEach(btn => {
+    btn.addEventListener("click", () => deleteRow(tab, Number(btn.dataset.id)));
+  });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, m => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  })[m]);
 }
 
 async function deleteRow(tab, id) {
@@ -228,34 +250,39 @@ async function deleteRow(tab, id) {
 }
 
 /* ============================================================
-   MODAL (Eintrag anlegen)
+   BOTTOM SHEET (Neu anlegen)
    ============================================================ */
-function openAddModal(tab) {
-  modalTab = tab;
-  document.getElementById("modal-title").textContent =
+function openSheet(tab) {
+  sheetTab = tab;
+  document.getElementById("sheetTitle").textContent = "Neues " + TABLES[tab].title.slice(0, -1);
+  document.getElementById("sheetTitle").textContent =
     tab === "werkzeuge" ? "Neues Werkzeug" : "Neues Baumaterial";
 
-  const form = document.getElementById("add-form");
+  const form = document.getElementById("sheetForm");
   form.innerHTML = "";
   TABLES[tab].columns.forEach(c => {
-    const div = document.createElement("div");
-    div.className = "field";
-    const type = (c.key === "menge") ? "number" : "text";
-    div.innerHTML = `<label>${c.label}</label>
-      <input name="${c.key}" type="${type}" step="any">`;
-    form.appendChild(div);
+    const label = document.createElement("label");
+    label.className = (c.type === "txt") ? "full" : "";
+    const type = (c.type === "num") ? "number" : "text";
+    const inp = document.createElement("input");
+    inp.name = c.key;
+    inp.type = type;
+    if (c.type === "num") inp.step = "any";
+    label.textContent = c.label + "\n";
+    label.appendChild(inp);
+    form.appendChild(label);
   });
   const btn = document.createElement("button");
   btn.type = "submit";
-  btn.className = "btn btn-primary";
+  btn.className = "sheet-submit";
   btn.textContent = "Speichern";
   form.appendChild(btn);
 
-  document.getElementById("modal").classList.remove("hidden");
+  document.getElementById("sheetOverlay").style.display = "flex";
 }
 
-function closeAddModal() {
-  document.getElementById("modal").classList.add("hidden");
+function closeSheet() {
+  document.getElementById("sheetOverlay").style.display = "none";
 }
 
 /* ============================================================
