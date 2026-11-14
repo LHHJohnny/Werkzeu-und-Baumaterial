@@ -44,7 +44,7 @@
       </div>
     </header>
 
-    <!-- Tabs: Werkzeuge / Baumaterialien -->
+    <!-- Tabs -->
     <section class="vehicles-section">
       <div class="vehicle-tabs" id="tabTabs">
         <div class="vehicle-tab active" data-tab="werkzeuge">
@@ -56,7 +56,7 @@
       </div>
     </section>
 
-    <!-- Aktive Tabelle -->
+    <!-- Tabelle -->
     <section class="entries-section">
       <div class="section-header">
         <h2 class="section-title-inline" id="sectionTitle">Werkzeuge</h2>
@@ -75,7 +75,7 @@
     </section>
   </div>
 
-  <!-- ================= BOTTOM SHEET (Neu anlegen) ================= -->
+  <!-- ================= BOTTOM SHEET ================= -->
   <div class="sheet-overlay" id="sheetOverlay" style="display:none">
     <div class="bottom-sheet">
       <div class="sheet-grabber"></div>
@@ -85,7 +85,10 @@
     </div>
   </div>
 
+  <!-- ⚠️ REIHENFOLGE IST KRIITISCH – NICHT VERTAUSCHEN! ⚠️ -->
+  <!-- 1. Supabase SDK MUSS vorher geladen werden (keine type="module"!) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- 2. app.js danach (keine type="module"!) -->
   <script src="app.js"></script>
 </body>
 </html>
