@@ -1,100 +1,91 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-theme="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Werkzeugliste</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <title>🧰 Werkzeugliste</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- ===================== LOGIN ===================== -->
-  <div id="login-view" class="hidden">
+  <!-- ================= LOGIN ================= -->
+  <div class="login-wrap" id="loginScreen">
     <div class="login-card">
       <h1>🧰 Werkzeugliste</h1>
-      <p class="subtitle">Bitte mit E-Mail und Passwort anmelden</p>
-      <form id="login-form">
-        <div class="field">
-          <label for="email">E-Mail</label>
-          <input type="email" id="email" required autocomplete="email">
-        </div>
-        <div class="field">
-          <label for="password">Passwort</label>
-          <input type="password" id="password" required autocomplete="current-password">
-        </div>
-        <button type="submit" class="btn btn-primary">Anmelden</button>
-        <p id="login-error" class="error"></p>
+      <p class="login-sub">Bitte anmelden</p>
+      <form id="loginForm">
+        <label>E-Mail
+          <input type="email" id="loginEmail" autocomplete="username" required />
+        </label>
+        <label>Passwort
+          <input type="password" id="loginPass" autocomplete="current-password" required />
+        </label>
+        <div class="login-error" id="loginError"></div>
+        <button type="submit" id="loginBtn">Anmelden</button>
       </form>
     </div>
   </div>
 
-  <!-- ===================== APP ===================== -->
-  <div id="app-view" class="hidden">
+  <!-- ================= APP ================= -->
+  <div id="appScreen" style="display:none">
     <header class="app-header">
-      <div class="brand">
-        <span class="brand-title">🧰 Werkzeugliste</span>
-        <span class="badge" id="role-badge"></span>
-        <span class="brand-user" id="user-email"></span>
+      <h1>Werkzeugliste <span class="role-tag" id="roleTag"></span></h1>
+      <div class="header-actions">
+        <button class="theme-btn" id="themeToggle" title="Design umschalten">🌙</button>
+        <button class="logout-btn" id="logoutBtn" title="Abmelden" aria-label="Abmelden">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M14 4H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7"/>
+            <path d="M16 8l4 4-4 4"/>
+            <path d="M20 12H9"/>
+          </svg>
+        </button>
       </div>
-      <button id="logout-btn" class="btn btn-ghost">Abmelden</button>
     </header>
 
-    <nav class="tabs">
-      <button class="tab active" data-tab="werkzeuge">Werkzeuge</button>
-      <button class="tab" data-tab="baumaterialien">Baumaterialien</button>
-    </nav>
-
-    <!-- Tabelle: Werkzeuge -->
-    <section class="panel" id="tab-werkzeuge">
-      <div class="toolbar">
-        <input type="search" id="search-werkzeuge" class="search" placeholder="Werkzeuge durchsuchen…">
-        <button class="btn btn-add editor-only" id="add-werkzeug">+ Werkzeug</button>
-      </div>
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Hersteller</th><th>Gerät</th><th>Bezeichnung</th>
-              <th>Gewerk/Art</th><th>Bemerkung</th><th></th>
-            </tr>
-          </thead>
-          <tbody id="rows-werkzeuge"></tbody>
-        </table>
+    <!-- Tabs: Werkzeuge / Baumaterialien -->
+    <section class="vehicles-section">
+      <div class="vehicle-tabs" id="tabTabs">
+        <div class="vehicle-tab active" data-tab="werkzeuge">
+          <span class="tab-name">Werkzeuge</span>
+        </div>
+        <div class="vehicle-tab" data-tab="baumaterialien">
+          <span class="tab-name">Baumaterialien</span>
+        </div>
       </div>
     </section>
 
-    <!-- Tabelle: Baumaterialien -->
-    <section class="panel hidden" id="tab-baumaterialien">
-      <div class="toolbar">
-        <input type="search" id="search-baumaterialien" class="search" placeholder="Baumaterialien durchsuchen…">
-        <button class="btn btn-add editor-only" id="add-baumaterial">+ Baumaterial</button>
+    <!-- Aktive Tabelle -->
+    <section class="entries-section">
+      <div class="section-header">
+        <h2 class="section-title-inline" id="sectionTitle">Werkzeuge</h2>
+        <button class="fab-btn editor-only" id="openSheet" title="Neu" aria-label="Neu">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </button>
       </div>
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Hersteller</th><th>Bezeichnung</th><th>Gewerk/Art</th>
-              <th>Menge</th><th>Einheit</th><th>Bemerkung</th><th></th>
-            </tr>
-          </thead>
-          <tbody id="rows-baumaterialien"></tbody>
-        </table>
-      </div>
+      <div class="status-bar" id="status"></div>
+      <input class="search-bar" id="searchBar" type="search" placeholder="Durchsuchen…" />
+      <div class="entries-table-wrap" id="tableWrap"></div>
+      <div class="empty-state" id="emptyState">Keine Einträge gefunden.</div>
     </section>
   </div>
 
-  <!-- ===================== MODAL (Anlegen) ===================== -->
-  <div id="modal" class="modal hidden">
-    <div class="modal-card">
-      <div class="modal-head">
-        <h2 id="modal-title">Eintrag anlegen</h2>
-        <button id="modal-close" class="btn-icon" title="Schließen">✕</button>
-      </div>
-      <form id="add-form"></form>
+  <!-- ================= BOTTOM SHEET (Neu anlegen) ================= -->
+  <div class="sheet-overlay" id="sheetOverlay" style="display:none">
+    <div class="bottom-sheet">
+      <div class="sheet-grabber"></div>
+      <button class="sheet-close" id="sheetClose" type="button">✕</button>
+      <h3 id="sheetTitle">Neu anlegen</h3>
+      <form class="sheet-form" id="sheetForm"></form>
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js"></script>
 </body>
 </html>
