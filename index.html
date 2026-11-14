@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Werkzeugliste</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <!-- ===================== LOGIN ===================== -->
+  <div id="login-view" class="hidden">
+    <div class="login-card">
+      <h1>🧰 Werkzeugliste</h1>
+      <p class="subtitle">Bitte mit E-Mail und Passwort anmelden</p>
+      <form id="login-form">
+        <div class="field">
+          <label for="email">E-Mail</label>
+          <input type="email" id="email" required autocomplete="email">
+        </div>
+        <div class="field">
+          <label for="password">Passwort</label>
+          <input type="password" id="password" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn-primary">Anmelden</button>
+        <p id="login-error" class="error"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================== APP ===================== -->
+  <div id="app-view" class="hidden">
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-title">🧰 Werkzeugliste</span>
+        <span class="badge" id="role-badge"></span>
+        <span class="brand-user" id="user-email"></span>
+      </div>
+      <button id="logout-btn" class="btn btn-ghost">Abmelden</button>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab active" data-tab="werkzeuge">Werkzeuge</button>
+      <button class="tab" data-tab="baumaterialien">Baumaterialien</button>
+    </nav>
+
+    <!-- Tabelle: Werkzeuge -->
+    <section class="panel" id="tab-werkzeuge">
+      <div class="toolbar">
+        <input type="search" id="search-werkzeuge" class="search" placeholder="Werkzeuge durchsuchen…">
+        <button class="btn btn-add editor-only" id="add-werkzeug">+ Werkzeug</button>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Hersteller</th><th>Gerät</th><th>Bezeichnung</th>
+              <th>Gewerk/Art</th><th>Bemerkung</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="rows-werkzeuge"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Tabelle: Baumaterialien -->
+    <section class="panel hidden" id="tab-baumaterialien">
+      <div class="toolbar">
+        <input type="search" id="search-baumaterialien" class="search" placeholder="Baumaterialien durchsuchen…">
+        <button class="btn btn-add editor-only" id="add-baumaterial">+ Baumaterial</button>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Hersteller</th><th>Bezeichnung</th><th>Gewerk/Art</th>
+              <th>Menge</th><th>Einheit</th><th>Bemerkung</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="rows-baumaterialien"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <!-- ===================== MODAL (Anlegen) ===================== -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 id="modal-title">Eintrag anlegen</h2>
+        <button id="modal-close" class="btn-icon" title="Schließen">✕</button>
+      </div>
+      <form id="add-form"></form>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
