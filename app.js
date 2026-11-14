@@ -1,14 +1,15 @@
+// ⬇️⬇️⬇️ EINSTELLUNGSZEILE – Supabase wird hier importiert ⬇️⬇️⬇️
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+// ⬆️⬆️⬆️ Damit ist createClient garantiert verfügbar, bevor der Rest läuft.
+
 /* ============================================================
    WERKZEUGLISTE – Logik (Supabase)
-   Optik/Verhalten analog Tankbuch
    ============================================================ */
 
 // ---------- ZUGANGSDATEN (aus "API Daten.txt") ----------
 const SUPABASE_URL      = "https://qnjdxajhlmixmfpimzkf.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_3kG5HjJeEbvDBT1BKtGiEw_wID12RiX";
 
-// WICHTIG: Nicht "supabase" benennen – das ist ein nicht-konfigurierbares
-// globales Property der SDK. Stattdessen: "client"
 const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ---------- SPALTEN-DEFINITIONEN ----------
@@ -58,7 +59,8 @@ function applyTheme(t) {
 function initTheme() {
   const saved = localStorage.getItem("wl-theme") || "dark";
   applyTheme(saved);
-  document.getElementById("themeToggle").addEventListener("click", () => {
+  const btn = document.getElementById("themeToggle");
+  if (btn) btn.addEventListener("click", () => {
     const next = (document.documentElement.getAttribute("data-theme") === "dark") ? "light" : "dark";
     applyTheme(next);
     localStorage.setItem("wl-theme", next);
