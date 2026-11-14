@@ -7,10 +7,11 @@
 const SUPABASE_URL      = "https://qnjdxajhlmixmfpimzkf.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_3kG5HjJeEbvDBT1BKtGiEw_wID12RiX";
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// WICHTIG: Nicht "supabase" benennen – das ist ein nicht-konfigurierbares
+// globales Property der SDK. Stattdessen: "client"
+const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ---------- SPALTEN-DEFINITIONEN ----------
-// txt: Text-Zelle (links, umlaufbar)  |  num: Zahl  |  rest: Standard
 const TABLES = {
   werkzeuge: {
     db: "werkzeuge",
@@ -70,11 +71,11 @@ function initTheme() {
 async function init() {
   initTheme();
   bindUI();
-  const { data } = await supabase.auth.getSession();
+  const { data } = await client.auth.getSession();
   if (data?.session) showApp(data.session.user);
   else showLogin();
 
-  supabase.auth.onAuthStateChange((_e, session) => {
+  client.auth.onAuthStateChange((_e, session) => {
     if (session) showApp(session.user);
     else showLogin();
   });
@@ -109,7 +110,7 @@ async function loadAll() {
 }
 
 async function loadTable(tab) {
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from(TABLES[tab].db).select("*").order("id");
   if (error) { console.error(error); return; }
   state.data[tab] = data || [];
@@ -126,12 +127,12 @@ function bindUI() {
     const password = document.getElementById("loginPass").value;
     const errEl    = document.getElementById("loginError");
     errEl.textContent = "";
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await client.auth.signInWithPassword({ email, password });
     if (error) errEl.textContent = "Anmeldung fehlgeschlagen: " + error.message;
   });
 
   // Logout
-  document.getElementById("logoutBtn").addEventListener("click", () => supabase.auth.signOut());
+  document.getElementById("logoutBtn").addEventListener("click", () => client.auth.signOut());
 
   // Tabs
   document.querySelectorAll("#tabTabs .vehicle-tab").forEach(tabEl => {
@@ -173,7 +174,7 @@ function bindUI() {
       if (c.type === "num") obj[c.key] = (val === "" ? null : Number(val));
       else obj[c.key] = val;
     });
-    const { error } = await supabase.from(TABLES[sheetTab].db).insert(obj);
+    const { error } = await client.from(TABLES[sheetTab].db).insert(obj);
     if (error) { alert("Fehler: " + error.message); return; }
     closeSheet();
     await loadTable(sheetTab);
@@ -229,7 +230,6 @@ function render() {
   html += "</tbody></table>";
   wrap.innerHTML = html;
 
-  // Lösch-Buttons binden
   wrap.querySelectorAll(".entry-del").forEach(btn => {
     btn.addEventListener("click", () => deleteRow(tab, Number(btn.dataset.id)));
   });
@@ -243,7 +243,7 @@ function escapeHtml(s) {
 
 async function deleteRow(tab, id) {
   if (!confirm("Eintrag wirklich löschen?")) return;
-  const { error } = await supabase.from(TABLES[tab].db).delete().eq("id", id);
+  const { error } = await client.from(TABLES[tab].db).delete().eq("id", id);
   if (error) { alert("Fehler: " + error.message); return; }
   state.data[tab] = state.data[tab].filter(r => r.id !== id);
   render();
@@ -254,7 +254,6 @@ async function deleteRow(tab, id) {
    ============================================================ */
 function openSheet(tab) {
   sheetTab = tab;
-  document.getElementById("sheetTitle").textContent = "Neues " + TABLES[tab].title.slice(0, -1);
   document.getElementById("sheetTitle").textContent =
     tab === "werkzeuge" ? "Neues Werkzeug" : "Neues Baumaterial";
 
