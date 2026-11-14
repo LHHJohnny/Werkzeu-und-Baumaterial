@@ -85,10 +85,7 @@
     </div>
   </div>
 
-  <!-- ⚠️ REIHENFOLGE IST KRIITISCH – NICHT VERTAUSCHEN! ⚠️ -->
-  <!-- 1. Supabase SDK MUSS vorher geladen werden (keine type="module"!) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- 2. app.js danach (keine type="module"!) -->
-  <script src="app.js"></script>
+  <!-- EINZIGES Script-Tag – ES-Module, importiert Supabase selbst -->
+  <script type="module" src="app.js"></script>
 </body>
 </html>
