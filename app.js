@@ -11,30 +11,31 @@ const SUPABASE_ANON_KEY = "sb_publishable_3kG5HjJeEbvDBT1BKtGiEw_wID12RiX";
 const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ---------- SPALTEN-DEFINITIONEN ----------
+// layout: "pair" = halbe Breite (2er-Reihe), "full" = ganze Breite
 const TABLES = {
   werkzeuge: {
     db: "werkzeuge",
     title: "Werkzeuge",
     columns: [
-      { key: "hersteller",  label: "Hersteller",  type: "txt" },
-      { key: "gerat",       label: "Gerät",       type: "txt" },
-      { key: "bezeichnung", label: "Bezeichnung", type: "txt" },
-      { key: "gewerk_art",  label: "Gewerk/Art",  type: "txt" },
-      { key: "bemerkung",   label: "Bemerkung",   type: "txt" }
+      { key: "hersteller",  label: "Hersteller",  type: "txt",  layout: "pair" },
+      { key: "gerat",       label: "Gerät",       type: "txt",  layout: "pair" },
+      { key: "bezeichnung", label: "Bezeichnung", type: "txt",  layout: "pair" },
+      { key: "gewerk_art",  label: "Gewerk/Art",  type: "txt",  layout: "pair" },
+      { key: "bemerkung",   label: "Bemerkung",   type: "txt",  layout: "full" }
     ]
   },
   baumaterialien: {
     db: "baumaterialien",
     title: "Baumaterialien",
     columns: [
-      { key: "bezeichnung", label: "Bezeichnung", type: "txt" },
-      { key: "gewerk_art",  label: "Gewerk/Art",  type: "txt" },
-      { key: "menge",       label: "Menge",       type: "num" },
-      { key: "abmessungen", label: "Abmessungen", type: "txt" },
-      { key: "bemerkung",   label: "Bemerkung",   type: "txt" },
-      { key: "hersteller",  label: "Hersteller",  type: "txt" },
-      { key: "einheit",     label: "Einheit",     type: "txt" },
-      { key: "bezogen_am",  label: "Bezogen am",  type: "date" }
+      { key: "bezeichnung", label: "Bezeichnung", type: "txt",  layout: "pair" },
+      { key: "gewerk_art",  label: "Gewerk/Art",  type: "txt",  layout: "pair" },
+      { key: "menge",       label: "Menge",       type: "num",  layout: "pair" },
+      { key: "einheit",     label: "Einheit",     type: "txt",  layout: "pair" },
+      { key: "abmessungen", label: "Abmessungen", type: "txt",  layout: "full" },
+      { key: "hersteller",  label: "Hersteller",  type: "txt",  layout: "pair" },
+      { key: "bezogen_am",  label: "Bezogen am",  type: "date", layout: "pair" },
+      { key: "bemerkung",   label: "Bemerkung",   type: "txt",  layout: "full" }
     ]
   }
 };
@@ -304,7 +305,9 @@ async function deleteRow(tab, id) {
 }
 
 /* ============================================================
-   BOTTOM SHEET (anlegen + ändern)
+   BOTTOM SHEET (anlegen + ändern) – Layout wie Tank-App:
+   kurze Felder paarweise (2 Spalten), lange Felder/Textarea
+   über volle Breite
    ============================================================ */
 function openSheet(tab, row) {
   sheetTab = tab;
@@ -318,17 +321,35 @@ function openSheet(tab, row) {
   form.innerHTML = "";
   TABLES[tab].columns.forEach(c => {
     const label = document.createElement("label");
-    label.className = (c.type === "txt") ? "full" : "";
-    const inp = document.createElement("input");
-    inp.name = c.key;
-    if (c.type === "num")  { inp.type = "number"; inp.step = "any"; }
-    else if (c.type === "date") inp.type = "date";
-    else inp.type = "text";
-    if (row) inp.value = (row[c.key] == null) ? "" : row[c.key];
-    label.textContent = c.label + "\n";
-    label.appendChild(inp);
+    label.className = (c.layout === "full") ? "full" : "";
+
+    let field;
+    if (c.type === "num") {
+      field = document.createElement("input");
+      field.type = "text";
+      field.inputMode = "decimal";      // Kommazahl erlaubt
+      field.placeholder = "z. B. 2,5";
+    } else if (c.type === "date") {
+      field = document.createElement("input");
+      field.type = "date";
+    } else if (c.layout === "full") {
+      field = document.createElement("textarea");   // lange Texte (Bemerkung)
+      field.rows = 3;
+      field.placeholder = "optional";
+    } else {
+      field = document.createElement("input");
+      field.type = "text";
+    }
+    field.name = c.key;
+    if (row) field.value = (row[c.key] == null) ? "" : row[c.key];
+
+    const labelText = document.createElement("span");
+    labelText.textContent = c.label;
+    label.appendChild(labelText);
+    label.appendChild(field);
     form.appendChild(label);
   });
+
   const btn = document.createElement("button");
   btn.type = "submit";
   btn.className = "sheet-submit";
