@@ -27,12 +27,14 @@ const TABLES = {
     db: "baumaterialien",
     title: "Baumaterialien",
     columns: [
-      { key: "hersteller",  label: "Hersteller",  type: "txt" },
       { key: "bezeichnung", label: "Bezeichnung", type: "txt" },
       { key: "gewerk_art",  label: "Gewerk/Art",  type: "txt" },
       { key: "menge",       label: "Menge",       type: "num" },
+      { key: "abmessungen", label: "Abmessungen", type: "txt" },
+      { key: "bemerkung",   label: "Bemerkung",   type: "txt" },
+      { key: "hersteller",  label: "Hersteller",  type: "txt" },
       { key: "einheit",     label: "Einheit",     type: "txt" },
-      { key: "bemerkung",   label: "Bemerkung",   type: "txt" }
+      { key: "bezogen_am",  label: "Bezogen am",  type: "date" }
     ]
   }
 };
@@ -40,11 +42,13 @@ const TABLES = {
 const state = {
   tab: "werkzeuge",
   data:   { werkzeuge: [], baumaterialien: [] },
-  search: ""
+  search: "",
+  sort:   { key: null, dir: 1 }
 };
 
 let currentRole = "reader";
 let sheetTab = null;
+let editingId = null;
 
 /* ============================================================
    THEME
@@ -90,7 +94,6 @@ function showApp(user) {
   document.getElementById("loginScreen").style.display = "none";
   document.getElementById("appScreen").style.display = "block";
 
-  // ✅ FIX: user_metadata, nicht app_metadata
   currentRole = (user?.user_metadata?.role === "editor") ? "editor" : "reader";
   document.getElementById("roleTag").textContent =
     (currentRole === "editor") ? "Editor" : "Nur Lesen";
@@ -137,6 +140,7 @@ function bindUI() {
     tabEl.addEventListener("click", () => {
       state.tab = tabEl.dataset.tab;
       state.search = "";
+      state.sort = { key: null, dir: 1 };
       document.getElementById("searchBar").value = "";
       document.querySelectorAll("#tabTabs .vehicle-tab")
         .forEach(t => t.classList.toggle("active", t === tabEl));
@@ -151,7 +155,7 @@ function bindUI() {
   });
 
   document.getElementById("openSheet").addEventListener("click", () => {
-    if (currentRole === "editor") openSheet(state.tab);
+    if (currentRole === "editor") openSheet(state.tab, null);
   });
 
   document.getElementById("sheetClose").addEventListener("click", closeSheet);
@@ -164,15 +168,46 @@ function bindUI() {
     const form = e.target;
     const obj = {};
     TABLES[sheetTab].columns.forEach(c => {
-      const val = form.elements[c.key].value.trim();
-      if (c.type === "num") obj[c.key] = (val === "" ? null : Number(val));
-      else obj[c.key] = val;
+      const raw = form.elements[c.key].value.trim();
+      if (c.type === "num")  obj[c.key] = (raw === "" ? null : Number(raw));
+      else if (c.type === "date") obj[c.key] = (raw === "" ? null : raw);
+      else obj[c.key] = (raw === "" ? null : raw);
     });
-    const { error } = await client.from(TABLES[sheetTab].db).insert(obj);
+
+    let error;
+    if (editingId !== null) {
+      const res = await client.from(TABLES[sheetTab].db)
+        .update(obj).eq("id", editingId);
+      error = res.error;
+    } else {
+      const res = await client.from(TABLES[sheetTab].db).insert(obj);
+      error = res.error;
+    }
     if (error) { alert("Fehler: " + error.message); return; }
     closeSheet();
     await loadTable(sheetTab);
     render();
+  });
+}
+
+/* ============================================================
+   SORTIEREN
+   ============================================================ */
+function sortRows(rows, tab) {
+  const s = state.sort;
+  if (!s.key) return rows;
+  const col  = TABLES[tab].columns.find(c => c.key === s.key);
+  const type = col ? col.type : "txt";
+  return [...rows].sort((a, b) => {
+    let va = (a[s.key] == null) ? "" : a[s.key];
+    let vb = (b[s.key] == null) ? "" : b[s.key];
+    let r;
+    if (type === "num") {
+      r = (Number(va) || 0) - (Number(vb) || 0);
+    } else {
+      r = String(va).localeCompare(String(vb), "de", { sensitivity: "base" });
+    }
+    return r * s.dir;
   });
 }
 
@@ -191,7 +226,7 @@ function render() {
   const wrap   = document.getElementById("tableWrap");
   const empty  = document.getElementById("emptyState");
   const status = document.getElementById("status");
-  const rows   = state.data[tab].filter(r => matchesSearch(r, tab));
+  const rows   = sortRows(state.data[tab].filter(r => matchesSearch(r, tab)), tab);
 
   status.textContent = rows.length + " Einträge";
 
@@ -205,7 +240,11 @@ function render() {
 
   let html = '<table class="entry-table"><thead><tr>';
   TABLES[tab].columns.forEach(c => {
-    html += `<th class="${c.type === 'txt' ? 'txt' : ''}">${c.label}</th>`;
+    const active = state.sort.key === c.key;
+    const ind = active
+      ? `<span class="sort-ind">${state.sort.dir === 1 ? "▲" : "▼"}</span>`
+      : "";
+    html += `<th class="sortable ${c.type === 'txt' ? 'txt' : ''}" data-key="${c.key}">${c.label}${ind}</th>`;
   });
   if (currentRole === "editor") html += "<th></th>";
   html += "</tr></thead><tbody>";
@@ -217,16 +256,37 @@ function render() {
       html += `<td class="${c.type === 'txt' ? 'txt' : ''}">${escapeHtml(val)}</td>`;
     });
     if (currentRole === "editor") {
-      html += `<td><button class="entry-del" data-id="${row.id}" title="Löschen">🗑</button></td>`;
+      html += `<td class="actions">
+        <button class="entry-edit" data-id="${row.id}" title="Ändern">✏️</button>
+        <button class="entry-del"  data-id="${row.id}" title="Löschen">🗑</button>
+      </td>`;
     }
     html += "</tr>";
   });
   html += "</tbody></table>";
   wrap.innerHTML = html;
 
-  wrap.querySelectorAll(".entry-del").forEach(btn => {
-    btn.addEventListener("click", () => deleteRow(tab, Number(btn.dataset.id)));
+  // Sortierung: Klick auf Spaltenüberschrift
+  wrap.querySelectorAll("th.sortable").forEach(th => {
+    th.addEventListener("click", () => {
+      const key = th.dataset.key;
+      if (state.sort.key === key) state.sort.dir *= -1;
+      else state.sort = { key, dir: 1 };
+      render();
+    });
   });
+
+  if (currentRole === "editor") {
+    wrap.querySelectorAll(".entry-del").forEach(btn => {
+      btn.addEventListener("click", () => deleteRow(tab, Number(btn.dataset.id)));
+    });
+    wrap.querySelectorAll(".entry-edit").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const row = state.data[tab].find(r => r.id === Number(btn.dataset.id));
+        if (row) openSheet(tab, row);
+      });
+    });
+  }
 }
 
 function escapeHtml(s) {
@@ -244,23 +304,27 @@ async function deleteRow(tab, id) {
 }
 
 /* ============================================================
-   BOTTOM SHEET
+   BOTTOM SHEET (anlegen + ändern)
    ============================================================ */
-function openSheet(tab) {
+function openSheet(tab, row) {
   sheetTab = tab;
+  editingId = row ? row.id : null;
   document.getElementById("sheetTitle").textContent =
-    tab === "werkzeuge" ? "Neues Werkzeug" : "Neues Baumaterial";
+    row
+      ? "Eintrag ändern"
+      : (tab === "werkzeuge" ? "Neues Werkzeug" : "Neues Baumaterial");
 
   const form = document.getElementById("sheetForm");
   form.innerHTML = "";
   TABLES[tab].columns.forEach(c => {
     const label = document.createElement("label");
     label.className = (c.type === "txt") ? "full" : "";
-    const type = (c.type === "num") ? "number" : "text";
     const inp = document.createElement("input");
     inp.name = c.key;
-    inp.type = type;
-    if (c.type === "num") inp.step = "any";
+    if (c.type === "num")  { inp.type = "number"; inp.step = "any"; }
+    else if (c.type === "date") inp.type = "date";
+    else inp.type = "text";
+    if (row) inp.value = (row[c.key] == null) ? "" : row[c.key];
     label.textContent = c.label + "\n";
     label.appendChild(inp);
     form.appendChild(label);
@@ -268,7 +332,7 @@ function openSheet(tab) {
   const btn = document.createElement("button");
   btn.type = "submit";
   btn.className = "sheet-submit";
-  btn.textContent = "Speichern";
+  btn.textContent = row ? "Speichern" : "Anlegen";
   form.appendChild(btn);
 
   document.getElementById("sheetOverlay").style.display = "flex";
@@ -276,6 +340,7 @@ function openSheet(tab) {
 
 function closeSheet() {
   document.getElementById("sheetOverlay").style.display = "none";
+  editingId = null;
 }
 
 /* ============================================================
