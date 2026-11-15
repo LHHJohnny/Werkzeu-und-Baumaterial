@@ -1,12 +1,10 @@
-// ⬇️⬇️⬇️ EINSTELLUNGSZEILE – Supabase wird hier importiert ⬇️⬇️⬇️
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-// ⬆️⬆️⬆️ Damit ist createClient garantiert verfügbar, bevor der Rest läuft.
 
 /* ============================================================
    WERKZEUGLISTE – Logik (Supabase)
    ============================================================ */
 
-// ---------- ZUGANGSDATEN (aus "API Daten.txt") ----------
+// ---------- ZUGANGSDATEN ----------
 const SUPABASE_URL      = "https://qnjdxajhlmixmfpimzkf.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_3kG5HjJeEbvDBT1BKtGiEw_wID12RiX";
 
@@ -49,7 +47,7 @@ let currentRole = "reader";
 let sheetTab = null;
 
 /* ============================================================
-   THEME (Dark/Light, gespeichert)
+   THEME
    ============================================================ */
 function applyTheme(t) {
   document.documentElement.setAttribute("data-theme", t);
@@ -92,7 +90,8 @@ function showApp(user) {
   document.getElementById("loginScreen").style.display = "none";
   document.getElementById("appScreen").style.display = "block";
 
-  currentRole = (user?.app_metadata?.role === "editor") ? "editor" : "reader";
+  // ✅ FIX: user_metadata, nicht app_metadata
+  currentRole = (user?.user_metadata?.role === "editor") ? "editor" : "reader";
   document.getElementById("roleTag").textContent =
     (currentRole === "editor") ? "Editor" : "Nur Lesen";
   updateRoleUI();
@@ -122,7 +121,6 @@ async function loadTable(tab) {
    UI-BINDINGS
    ============================================================ */
 function bindUI() {
-  // Login
   document.getElementById("loginForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const email    = document.getElementById("loginEmail").value;
@@ -133,10 +131,8 @@ function bindUI() {
     if (error) errEl.textContent = "Anmeldung fehlgeschlagen: " + error.message;
   });
 
-  // Logout
   document.getElementById("logoutBtn").addEventListener("click", () => client.auth.signOut());
 
-  // Tabs
   document.querySelectorAll("#tabTabs .vehicle-tab").forEach(tabEl => {
     tabEl.addEventListener("click", () => {
       state.tab = tabEl.dataset.tab;
@@ -149,24 +145,20 @@ function bindUI() {
     });
   });
 
-  // Suche
   document.getElementById("searchBar").addEventListener("input", (e) => {
     state.search = e.target.value.trim().toLowerCase();
     render();
   });
 
-  // FAB -> Bottom Sheet (nur Editor)
   document.getElementById("openSheet").addEventListener("click", () => {
     if (currentRole === "editor") openSheet(state.tab);
   });
 
-  // Sheet schließen
   document.getElementById("sheetClose").addEventListener("click", closeSheet);
   document.getElementById("sheetOverlay").addEventListener("click", (e) => {
     if (e.target.id === "sheetOverlay") closeSheet();
   });
 
-  // Eintrag speichern
   document.getElementById("sheetForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const form = e.target;
@@ -252,7 +244,7 @@ async function deleteRow(tab, id) {
 }
 
 /* ============================================================
-   BOTTOM SHEET (Neu anlegen)
+   BOTTOM SHEET
    ============================================================ */
 function openSheet(tab) {
   sheetTab = tab;
