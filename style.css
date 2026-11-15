@@ -151,7 +151,6 @@ h2 {
   letter-spacing: 0.5px; margin: 24px 0 10px;
 }
 .section-title-inline { margin-top: 0; }
-.vehicles-section { margin-bottom: 20px; }
 .entries-section  { margin-bottom: 40px; }
 
 /* 6. TABS (Werkzeuge / Baumaterialien) – wie Fahrzeug-Tabs */
@@ -178,7 +177,7 @@ h2 {
 .vehicle-tab .tab-avg  { font-size: 0.74rem; font-weight: 500; opacity: 0.75; }
 .vehicle-tab.active .tab-avg { opacity: 0.85; }
 
-/* 7. BELEGE – kompakte Tabelle */
+/* 7. TABELLE – kompakt */
 .section-header {
   display: flex; justify-content: space-between; align-items: center;
 }
@@ -259,9 +258,14 @@ h2 {
 .entry-table td:first-child,
 .entry-table th:first-child { text-align: left; }
 
-/* Werkzeuglisten-Zellen mit Text: linksbündig, umlaufbar */
+/* Zellen mit Text: linksbündig, umlaufbar */
 .entry-table td.txt,
 .entry-table th.txt { text-align: left; white-space: normal; min-width: 90px; max-width: 220px; }
+
+/* Sortierbare Überschriften */
+.entry-table thead th.sortable { cursor: pointer; user-select: none; }
+.entry-table thead th.sortable:hover { color: var(--blue); }
+.entry-table thead th .sort-ind { color: var(--blue); margin-left: 4px; font-size: 0.7rem; }
 
 .entry-del {
   color: var(--red); background: none; border: none;
@@ -269,6 +273,15 @@ h2 {
   padding: 2px 6px; min-width: 28px; min-height: 28px; border-radius: 50%;
 }
 .entry-del:hover, .entry-del:active { background: var(--blue-light); }
+
+.entry-edit {
+  color: var(--blue); background: none; border: none;
+  font-size: 0.85rem; cursor: pointer;
+  padding: 2px 6px; min-width: 28px; min-height: 28px; border-radius: 50%;
+}
+.entry-edit:hover, .entry-edit:active { background: var(--blue-light); }
+
+td.actions { white-space: nowrap; }
 
 .empty-state {
   color: var(--muted); padding: 32px 16px;
