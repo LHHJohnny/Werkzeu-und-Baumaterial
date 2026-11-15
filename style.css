@@ -121,6 +121,7 @@ body {
 .app-header h1 { font-size: 1.6rem; font-weight: 700; }
 .header-actions { display: flex; gap: 8px; align-items: center; }
 
+/* Logout – Kreis, identisch zum Theme-Button */
 .logout-btn {
   width: 40px; height: 40px;
   display: flex; align-items: center; justify-content: center;
@@ -296,7 +297,7 @@ td.actions { white-space: nowrap; }
   background: var(--bg-input); border: 1px solid var(--border-light);
 }
 
-/* 8. BOTTOM SHEET (Popup) – iOS Sheet */
+/* 8. BOTTOM SHEET (Popup) – iOS Sheet, Formular wie Tank-App */
 .sheet-overlay {
   position: fixed; inset: 0;
   background: var(--bg-overlay);
@@ -305,7 +306,7 @@ td.actions { white-space: nowrap; }
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   animation: fadeIn 0.25s ease;
-  overflow: hidden;
+  overflow: hidden;                 /* kein Seitwärts-Scrollen durch die Tastatur */
 }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
@@ -337,7 +338,8 @@ td.actions { white-space: nowrap; }
   text-align: center; margin-bottom: 20px;
 }
 
-/* 2-Spalten-Grid; .full = ganze Breite */
+/* 2-Spalten-Grid; .full = ganze Breite (lange Felder, Button)
+   – gleiche Struktur wie das Beleg-Formular in der Tank-App */
 .sheet-form {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -369,6 +371,24 @@ td.actions { white-space: nowrap; }
 }
 .sheet-form input:focus,
 .sheet-form select:focus { border-color: var(--blue); }
+
+/* Textarea im Sheet (größeres Bemerkungsfeld) – wie in der Tank-App */
+.sheet-form textarea {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-family: inherit;
+  background: var(--bg-input); color: var(--text);
+  outline: none;
+  transition: border-color 0.2s;
+  resize: vertical;
+  min-height: 80px;
+}
+.sheet-form textarea:focus { border-color: var(--blue); }
 
 .sheet-submit {
   margin-top: 8px; padding: 14px;
@@ -410,6 +430,7 @@ button:hover  { filter: brightness(1.05); }
 button:active { filter: brightness(0.95); transform: scale(0.98); }
 
 body, .login-card, .vehicle-tab, .entry-table, .bottom-sheet,
-.app-header, .sheet-form input, .sheet-form select, .login-card input {
+.app-header, .sheet-form input, .sheet-form select, .sheet-form textarea,
+.login-card input {
   transition: background-color 0.3s, color 0.3s, border-color 0.3s;
 }
