@@ -11,14 +11,19 @@ const SUPABASE_ANON_KEY = "sb_publishable_3kG5HjJeEbvDBT1BKtGiEw_wID12RiX";
 const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ---------- SPALTEN-DEFINITIONEN ----------
-// layout: "pair" = halbe Breite (2er-Reihe), "full" = ganze Breite
+// layout: "full" = ganze Breite | "pair" = halbe Breite (2er-Reihe)
+// Popup-Layout analog Tankbuch:
+//   Zeile 1: Hauptfeld (full)
+//   Zeile 2: Hauptfeld (full)
+//   Zeile 3+: kurze Felder paarweise
+//   Letzte Zeile: Bemerkung (full)
 const TABLES = {
   werkzeuge: {
     db: "werkzeuge",
     title: "Werkzeuge",
     columns: [
-      { key: "hersteller",  label: "Hersteller",  type: "txt",  layout: "pair" },
-      { key: "gerat",       label: "Gerät",       type: "txt",  layout: "pair" },
+      { key: "hersteller",  label: "Hersteller",  type: "txt",  layout: "full" },
+      { key: "gerat",       label: "Gerät",       type: "txt",  layout: "full" },
       { key: "bezeichnung", label: "Bezeichnung", type: "txt",  layout: "pair" },
       { key: "gewerk_art",  label: "Gewerk/Art",  type: "txt",  layout: "pair" },
       { key: "bemerkung",   label: "Bemerkung",   type: "txt",  layout: "full" }
@@ -28,8 +33,8 @@ const TABLES = {
     db: "baumaterialien",
     title: "Baumaterialien",
     columns: [
-      { key: "bezeichnung", label: "Bezeichnung", type: "txt",  layout: "pair" },
-      { key: "gewerk_art",  label: "Gewerk/Art",  type: "txt",  layout: "pair" },
+      { key: "bezeichnung", label: "Bezeichnung", type: "txt",  layout: "full" },
+      { key: "gewerk_art",  label: "Gewerk/Art",  type: "txt",  layout: "full" },
       { key: "menge",       label: "Menge",       type: "num",  layout: "pair" },
       { key: "einheit",     label: "Einheit",     type: "txt",  layout: "pair" },
       { key: "abmessungen", label: "Abmessungen", type: "txt",  layout: "full" },
@@ -267,7 +272,6 @@ function render() {
   html += "</tbody></table>";
   wrap.innerHTML = html;
 
-  // Sortierung: Klick auf Spaltenüberschrift
   wrap.querySelectorAll("th.sortable").forEach(th => {
     th.addEventListener("click", () => {
       const key = th.dataset.key;
@@ -305,9 +309,13 @@ async function deleteRow(tab, id) {
 }
 
 /* ============================================================
-   BOTTOM SHEET (anlegen + ändern) – Layout wie Tank-App:
-   kurze Felder paarweise (2 Spalten), lange Felder/Textarea
-   über volle Breite
+   BOTTOM SHEET (anlegen + ändern)
+   Layout 1:1 wie Tankbuch:
+   Zeile 1  → Hauptfeld, volle Breite
+   Zeile 2  → Hauptfeld, volle Breite
+   Zeile 3+ → kurze Felder, 2er-Reihen
+   Letzte   → Bemerkung, volle Breite
+   Alle Felder als <input> (kein Textarea)
    ============================================================ */
 function openSheet(tab, row) {
   sheetTab = tab;
@@ -327,15 +335,10 @@ function openSheet(tab, row) {
     if (c.type === "num") {
       field = document.createElement("input");
       field.type = "text";
-      field.inputMode = "decimal";      // Kommazahl erlaubt
-      field.placeholder = "z. B. 2,5";
+      field.inputMode = "decimal";
     } else if (c.type === "date") {
       field = document.createElement("input");
       field.type = "date";
-    } else if (c.layout === "full") {
-      field = document.createElement("textarea");   // lange Texte (Bemerkung)
-      field.rows = 3;
-      field.placeholder = "optional";
     } else {
       field = document.createElement("input");
       field.type = "text";
@@ -368,3 +371,4 @@ function closeSheet() {
    START
    ============================================================ */
 init();
+   
