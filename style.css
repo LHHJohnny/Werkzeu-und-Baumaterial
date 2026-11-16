@@ -218,6 +218,8 @@ h2 {
   border: 1px solid var(--border-light);
   border-radius: var(--radius-sm);
   background: var(--bg-card);
+  max-height: 70dvh;   /* FIX: scrollbarer Container für sticky thead */
+  overflow-y: auto;
 }
 
 .entry-table {
