@@ -17,11 +17,12 @@ const TABLES = {
     db: "werkzeuge",
     title: "Werkzeuge",
     columns: [
-      { key: "hersteller",  label: "Hersteller",  type: "txt",  layout: "pair" },
-      { key: "gerat",       label: "Gerät",       type: "txt",  layout: "pair" },
-      { key: "bezeichnung", label: "Bezeichnung", type: "txt",  layout: "pair" },
-      { key: "gewerk_art",  label: "Gewerk/Art",  type: "txt",  layout: "pair" },
-      { key: "bemerkung",   label: "Bemerkung",   type: "txt",  layout: "full" }
+      { key: "hersteller",    label: "Hersteller",    type: "txt",  layout: "pair" },
+      { key: "gerat",         label: "Gerät",         type: "txt",  layout: "pair" },
+      { key: "bezeichnung",   label: "Bezeichnung",   type: "txt",  layout: "pair" },
+      { key: "gewerk_art",    label: "Gewerk/Art",    type: "txt",  layout: "pair" },
+      { key: "verliehen_an",  label: "Verliehen an",  type: "txt",  layout: "pair" },
+      { key: "bemerkung",     label: "Bemerkung",     type: "txt",  layout: "full" }
     ]
   },
   baumaterialien: {
@@ -304,9 +305,7 @@ async function deleteRow(tab, id) {
 }
 
 /* ============================================================
-   BOTTOM SHEET (anlegen + ändern) – 1:1 wie Tankbuch:
-   kurze Felder paarweise, lange Felder über volle Breite,
-   alle Felder als <input> (kein Textarea)
+   BOTTOM SHEET (anlegen + ändern)
    ============================================================ */
 function openSheet(tab, row) {
   sheetTab = tab;
@@ -332,7 +331,6 @@ function openSheet(tab, row) {
       field = document.createElement("input");
       field.type = "date";
     } else {
-      // Alle anderen Felder (inkl. Bemerkung, Abmessungen) → normales <input>
       field = document.createElement("input");
       field.type = "text";
       if (c.key === "bemerkung") field.placeholder = "optional";
