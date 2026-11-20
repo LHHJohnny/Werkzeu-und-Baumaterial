@@ -3,85 +3,86 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#000000" />
-  <title>🧰 Werkzeugliste</title>
+  <title>Werkzeugliste</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- ================= LOGIN ================= -->
-  <div class="login-wrap" id="loginScreen">
+  <!-- LOGIN -->
+  <div id="loginScreen" class="login-wrap" style="display:none">
     <div class="login-card">
       <h1>🧰 Werkzeugliste</h1>
       <p class="login-sub">Bitte anmelden</p>
       <form id="loginForm">
         <label>E-Mail
-          <input type="email" id="loginEmail" autocomplete="username" required />
+          <input type="email" id="loginEmail" autocomplete="email" required />
         </label>
         <label>Passwort
           <input type="password" id="loginPass" autocomplete="current-password" required />
         </label>
         <div class="login-error" id="loginError"></div>
-        <button type="submit" id="loginBtn">Anmelden</button>
+        <button type="submit">Anmelden</button>
       </form>
     </div>
   </div>
 
-  <!-- ================= APP ================= -->
+  <!-- APP -->
   <div id="appScreen" style="display:none">
+
     <header class="app-header">
       <h1>🧰 Werkzeugliste <span class="role-tag" id="roleTag"></span></h1>
       <div class="header-actions">
-        <button class="theme-btn" id="themeToggle" title="Design umschalten">🌙</button>
-        <button class="logout-btn" id="logoutBtn" title="Abmelden" aria-label="Abmelden">
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M14 4H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7"/>
-            <path d="M16 8l4 4-4 4"/>
-            <path d="M20 12H9"/>
+        <button id="shareBtn" class="theme-btn" title="Teilen">📤</button>
+        <button id="themeToggle" class="theme-btn" title="Theme wechseln">🌙</button>
+        <button id="logoutBtn" class="logout-btn" title="Abmelden">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
           </svg>
         </button>
       </div>
     </header>
 
-    <!-- Tabs -->
-    <section class="vehicles-section">
-      <div class="vehicle-tabs" id="tabTabs">
-        <div class="vehicle-tab active" data-tab="werkzeuge">
-          <span class="tab-name">Werkzeuge</span>
-        </div>
-        <div class="vehicle-tab" data-tab="baumaterialien">
-          <span class="tab-name">Baumaterialien</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- Tabelle -->
-    <section class="entries-section">
-      <div class="section-header">
-        <h2 class="section-title-inline" id="sectionTitle">Werkzeuge</h2>
-        <button class="fab-btn editor-only" id="openSheet" title="Neu" aria-label="Neu">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
-            <line x1="12" y1="5" x2="12" y2="19"/>
-            <line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
+    <div class="vehicles-section">
+      <h2>Listenauswahl</h2>
+      <div id="tabTabs" class="vehicle-tabs">
+        <button class="vehicle-tab active" data-tab="werkzeuge">
+          <span class="tab-name">🔧 Werkzeuge</span>
+        </button>
+        <button class="vehicle-tab" data-tab="baumaterialien">
+          <span class="tab-name">🪵 Baumaterialien</span>
         </button>
       </div>
+    </div>
+
+    <div class="entries-section">
+      <div class="section-header">
+        <h2 class="section-title-inline" id="sectionTitle">Werkzeuge</h2>
+        <button id="openSheet" class="fab-btn editor-only" title="Neu anlegen">＋</button>
+      </div>
+
+      <input type="search" id="searchBar" class="search-bar"
+             placeholder="Suchen…" autocomplete="off" />
       <div class="status-bar" id="status"></div>
-      <input class="search-bar" id="searchBar" type="search" placeholder="Durchsuchen…" />
-      <div class="entries-table-wrap" id="tableWrap"></div>
-      <div class="empty-state" id="emptyState">Keine Einträge gefunden.</div>
-    </section>
+
+      <div id="tableWrap" class="entries-table-wrap"></div>
+      <div id="emptyState" class="empty-state" style="display:none">
+        Keine Einträge gefunden.
+      </div>
+    </div>
+
   </div>
 
-  <!-- ================= BOTTOM SHEET – 1:1 wie Tankbuch ================= -->
-  <div class="sheet-overlay" id="sheetOverlay" style="display:none">
+  <!-- BOTTOM SHEET -->
+  <div id="sheetOverlay" class="sheet-overlay" style="display:none">
     <div class="bottom-sheet">
       <div class="sheet-grabber"></div>
-      <button class="sheet-close" id="sheetClose" type="button">✕</button>
+      <button id="sheetClose" class="sheet-close" title="Schließen">✕</button>
       <h3 id="sheetTitle">Neu anlegen</h3>
-      <form class="sheet-form" id="sheetForm"></form>
+      <form id="sheetForm"></form>
     </div>
   </div>
 
