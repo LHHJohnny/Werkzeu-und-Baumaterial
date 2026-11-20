@@ -123,6 +123,57 @@ async function loadTable(tab) {
 }
 
 /* ============================================================
+   TEILEN (Web Share API + Clipboard-Fallback)
+   ============================================================ */
+function buildShareText() {
+  const tab    = state.tab;
+  const config = TABLES[tab];
+  const rows   = sortRows(state.data[tab].filter(r => matchesSearch(r, tab)), tab);
+
+  const lines = [];
+  lines.push("🧰 Werkzeugliste – " + config.title);
+  if (state.search) lines.push("Suche: „" + state.search + "“");
+  lines.push(rows.length + " Einträge (Stand: " + new Date().toLocaleDateString("de-DE") + ")");
+  lines.push("");
+
+  config.columns.forEach(c => lines.push(c.label));
+  lines.push("-".repeat(40));
+
+  rows.forEach(row => {
+    lines.push(config.columns.map(c => {
+      const v = row[c.key];
+      return (v == null || v === "") ? "–" : String(v);
+    }).join(" | "));
+  });
+
+  return lines.join("\n");
+}
+
+async function shareList() {
+  const text = buildShareText();
+  const title = "🧰 Werkzeugliste – " + TABLES[state.tab].title;
+
+  // 1) Nativer Share-Dialog (iOS/Android)
+  if (navigator.share) {
+    try {
+      await navigator.share({ title, text });
+      return;
+    } catch (err) {
+      if (err && err.name === "AbortError") return; // Nutzer hat abgebrochen
+      // sonst unten auf Fallback
+    }
+  }
+
+  // 2) Fallback: in Zwischenablage kopieren
+  try {
+    await navigator.clipboard.writeText(text);
+    alert("Liste in die Zwischenablage kopiert. ✅");
+  } catch {
+    prompt("Text kopieren:", text);
+  }
+}
+
+/* ============================================================
    UI-BINDINGS
    ============================================================ */
 function bindUI() {
@@ -137,6 +188,8 @@ function bindUI() {
   });
 
   document.getElementById("logoutBtn").addEventListener("click", () => client.auth.signOut());
+
+  document.getElementById("shareBtn").addEventListener("click", shareList);
 
   document.querySelectorAll("#tabTabs .vehicle-tab").forEach(tabEl => {
     tabEl.addEventListener("click", () => {
