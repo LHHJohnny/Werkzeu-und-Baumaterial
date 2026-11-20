@@ -1,7 +1,6 @@
 /* ============================================================
    Werkzeugliste – style.css
    iOS-inspiriert, Dark-Mode default, kompakte Tabelle
-   (Optik 1:1 übernommen aus Tankbuch-Referenz)
    ============================================================ */
 
 /* 1. CSS-VARIABLES – Light & Dark */
@@ -121,8 +120,9 @@ body {
 .app-header h1 { font-size: 1.6rem; font-weight: 700; }
 .header-actions { display: flex; gap: 8px; align-items: center; }
 
+/* Logout: größer (52px statt 40px) */
 .logout-btn {
-  width: 40px; height: 40px;
+  width: 52px; height: 52px;
   display: flex; align-items: center; justify-content: center;
   border-radius: 50%;
   background: var(--bg-elevated);
@@ -130,6 +130,7 @@ body {
   border: 1px solid var(--border-light);
   transition: transform 0.2s, background 0.3s, color 0.3s, border-color 0.3s;
 }
+.logout-btn svg { width: 24px; height: 24px; }
 .logout-btn:hover, .logout-btn:active { border-color: var(--red); color: var(--red); }
 .logout-btn:active { transform: scale(0.95); }
 
@@ -154,28 +155,28 @@ h2 {
 .vehicles-section { margin-bottom: 20px; }
 .entries-section  { margin-bottom: 40px; }
 
-/* 6. TABS (Werkzeuge / Baumaterialien) – wie Fahrzeug-Tabs */
+/* 6. TABS (Werkzeuge / Baumaterialien) – kompakter, ca. 1/3 niedriger */
 .vehicle-tabs {
   display: flex; gap: 10px;
   overflow-x: auto; padding-bottom: 4px;
   -webkit-overflow-scrolling: touch;
 }
 .vehicle-tab {
-  padding: 10px 16px;
+  padding: 6px 14px;                 /* war: 10px 16px */
   border: 1px solid var(--border);
   border-radius: var(--radius);
   cursor: pointer;
-  display: flex; flex-direction: column; align-items: flex-start; gap: 3px;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
   background: var(--bg-card);
-  white-space: nowrap; min-height: 54px;
+  white-space: nowrap; min-height: 40px;   /* war: 54px */
   transition: all 0.2s; box-shadow: var(--shadow-sm);
 }
 .vehicle-tab:active { transform: scale(0.97); }
 .vehicle-tab.active {
   background: var(--blue); color: #fff; border-color: var(--blue);
 }
-.vehicle-tab .tab-name { font-weight: 600; font-size: 0.95rem; }
-.vehicle-tab .tab-avg  { font-size: 0.74rem; font-weight: 500; opacity: 0.75; }
+.vehicle-tab .tab-name { font-weight: 600; font-size: 0.85rem; }  /* war: 0.95rem */
+.vehicle-tab .tab-avg  { font-size: 0.72rem; font-weight: 500; opacity: 0.75; }
 .vehicle-tab.active .tab-avg { opacity: 0.85; }
 
 /* 7. TABELLE – kompakt */
@@ -218,7 +219,7 @@ h2 {
   border: 1px solid var(--border-light);
   border-radius: var(--radius-sm);
   background: var(--bg-card);
-  max-height: 70dvh;   /* FIX: scrollbarer Container für sticky thead */
+  max-height: 70dvh;
   overflow-y: auto;
 }
 
@@ -296,7 +297,7 @@ td.actions { white-space: nowrap; }
   background: var(--bg-input); border: 1px solid var(--border-light);
 }
 
-/* 8. BOTTOM SHEET (Popup) – 1:1 wie Tankbuch */
+/* 8. BOTTOM SHEET (Popup) */
 .sheet-overlay {
   position: fixed; inset: 0;
   background: var(--bg-overlay);
@@ -337,7 +338,6 @@ td.actions { white-space: nowrap; }
   text-align: center; margin-bottom: 20px;
 }
 
-/* 2-Spalten-Grid; .full = ganze Breite – wie im Tankbuch */
 .sheet-form {
   display: grid;
   grid-template-columns: 1fr 1fr;
