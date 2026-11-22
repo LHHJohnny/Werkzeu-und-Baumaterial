@@ -32,7 +32,15 @@
     <header class="app-header">
       <h1>🧰 Werkzeugliste <span class="role-tag" id="roleTag"></span></h1>
       <div class="header-actions">
-        <button id="shareBtn" class="theme-btn" title="Teilen">📤</button>
+        <button id="shareBtn" class="theme-btn" title="Teilen" aria-label="Teilen">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="12" y1="3" x2="12" y2="13"/>
+            <polyline points="8 7 12 3 16 7"/>
+            <path d="M8 11H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-2"/>
+          </svg>
+        </button>
         <button id="themeToggle" class="theme-btn" title="Theme wechseln">🌙</button>
         <button id="logoutBtn" class="logout-btn" title="Abmelden">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
@@ -50,10 +58,10 @@
       <h2>Listenauswahl</h2>
       <div id="tabTabs" class="vehicle-tabs">
         <button class="vehicle-tab active" data-tab="werkzeuge">
-          <span class="tab-name">🔧 Werkzeuge</span>
+          <span class="tab-name">Werkzeuge</span>
         </button>
         <button class="vehicle-tab" data-tab="baumaterialien">
-          <span class="tab-name">🪵 Baumaterialien</span>
+          <span class="tab-name">Baumaterialien</span>
         </button>
       </div>
     </div>
@@ -82,7 +90,7 @@
       <div class="sheet-grabber"></div>
       <button id="sheetClose" class="sheet-close" title="Schließen">✕</button>
       <h3 id="sheetTitle">Neu anlegen</h3>
-      <form id="sheetForm"></form>
+      <form id="sheetForm" class="sheet-form"></form>
     </div>
   </div>
 
